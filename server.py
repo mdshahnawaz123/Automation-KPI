@@ -63,7 +63,7 @@ def get_context():
 
 def get_cached_projects(ctx, force_refresh=False):
     if force_refresh or _cache.get("projects_list") is None:
-        _cache["projects_list"] = ctx.list_active_projects(name_filter="sky")
+        _cache["projects_list"] = ctx.list_active_projects()
     return _cache["projects_list"]
 
 
