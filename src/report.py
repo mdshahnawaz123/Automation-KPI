@@ -114,7 +114,7 @@ BASE_CSS = f"""
   .btn.secondary {{ background: var(--surface-2); color: var(--text-primary) !important; border: 1px solid var(--border); }}
   .btn-row {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }}
   .note {{ color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin: 0 0 18px; }}
-  .bar-row {{ display: grid; grid-template-columns: 280px 1fr 44px; align-items: center; gap: 14px; margin-bottom: 10px; font-size: 13px; }}
+  .bar-row {{ display: grid; grid-template-columns: 24px 280px 1fr 44px; align-items: center; gap: 14px; margin-bottom: 10px; font-size: 13px; }}
   .bar-label {{ color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }}
   .bar-label a {{ color: var(--text-primary); text-decoration: none; font-weight: 500; }}
   .bar-label a:hover {{ color: var(--accent); }}
@@ -341,7 +341,7 @@ def _page(title, account_name, generated_at, body_html):
 </html>"""
 
 
-def build_picker(items, empty_message="No projects match your filter."):
+def build_picker(items, empty_message="No projects match your filter.", show_checkboxes=False):
     """A styled, searchable list of {url, name, code, badge_html} -- the
     modern replacement for a plain <select>, shared by the fast project
     picker and the dashboard's "jump to a project" section."""
@@ -350,17 +350,20 @@ def build_picker(items, empty_message="No projects match your filter."):
         letters = "".join(ch for ch in code if ch.isalnum())[:2].upper()
         return letters or "?"
 
-    rows_html = "".join(
-        f'<div class="picker-row" data-search="{(it["name"] + " " + it["code"]).lower()}" '
-        f'onclick="window.location.href=this.dataset.href" data-href="{it["url"]}">'
-        f'<div class="picker-avatar" style="background:{_avatar_color(it["code"] or it["name"])}">{_initials(it)}</div>'
-        f'<div class="picker-main"><span class="picker-name">{it["name"]}</span>'
-        f'<span class="picker-code">{it["code"] or "unmatched"}</span></div>'
-        f'<div class="picker-badge">{it.get("badge_html", "")}</div>'
-        f'<span class="picker-arrow">&rarr;</span>'
-        f'</div>'
-        for it in items
-    )
+    rows_html = ""
+    for it in items:
+        checkbox = f'<input type="checkbox" class="proj-checkbox" value="{it.get("checkbox_value", "")}" style="margin-right:12px;" onclick="event.stopPropagation()">' if show_checkboxes else ""
+        rows_html += (
+            f'<div class="picker-row" data-search="{(it["name"] + " " + it["code"]).lower()}" '
+            f'onclick="window.location.href=this.dataset.href" data-href="{it["url"]}">'
+            f'{checkbox}'
+            f'<div class="picker-avatar" style="background:{_avatar_color(it["code"] or it["name"])}">{_initials(it)}</div>'
+            f'<div class="picker-main"><span class="picker-name">{it["name"]}</span>'
+            f'<span class="picker-code">{it["code"] or "unmatched"}</span></div>'
+            f'<div class="picker-badge">{it.get("badge_html", "")}</div>'
+            f'<span class="picker-arrow">&rarr;</span>'
+            f'</div>'
+        )
     return f"""
     <input class="picker-search" id="picker-search" type="text" placeholder="Search by project name or code...">
     <div class="picker-list" id="picker-list">{rows_html}</div>
@@ -626,3 +629,101 @@ def build_shared_bim_report(project_name, rows, generated_at, account_name="", b
     document.getElementById("f-flagged").addEventListener("change", applyFilters);
   </script>"""
     return _page(f"{project_name} -- Shared/BIM check", account_name, generated_at, body)
+
+def build_monthly_report(selected_data, generated_at, account_name=""):
+    title = "Monthly ACC Governance Report (Shared/BIM)"
+    
+    total_projects = len(selected_data)
+    total_issues = sum(d["issues_count"] for d in selected_data)
+    total_files = sum(d["total_files"] for d in selected_data)
+    
+    # Recommendations based on issues
+    recs = "<ul>"
+    if total_issues > 0:
+        recs += "<li><b>Correct File Naming & Descriptions:</b> Files in the Shared/BIM folder were found with missing descriptions or incorrect extensions. Recommend notifying the responsible authors (emails drafted via dashboard) to update the file attributes.</li>"
+    else:
+        recs += "<li><b>Excellent Compliance:</b> No issues detected in the Shared/BIM folders across selected projects. Continue current governance processes.</li>"
+    recs += "</ul>"
+    
+    project_rows = ""
+    for p in selected_data:
+        issues = p["issues_count"]
+        status = "Flagged" if issues > 0 else "Compliant"
+        color = STATUS_COLORS["serious"] if issues > 0 else STATUS_COLORS["good"]
+        
+        project_rows += f"""
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>{p['project_name']}</b><br><span style="font-size:11px;color:var(--muted)">{p['project_code'] or 'unmatched'}</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;"><span style="color:{color};font-weight:600;">{status}</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">{p['total_files']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; color: {color}">{issues}</td>
+        </tr>
+        """
+
+    body = f"""
+    <div style="max-width: 900px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: var(--shadow-sm); color: #333;">
+        <h1 style="border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 30px;">{title}</h1>
+        
+        <p><b>Date:</b> {generated_at}</p>
+        <p><b>Account:</b> {account_name}</p>
+        <p><b>Projects Included:</b> {total_projects}</p>
+        
+        <h2 style="margin-top:40px; color: var(--accent-dark); border-bottom: 1px solid #eee; padding-bottom: 8px;">1. Compliance Performance Summary</h2>
+        <div class="kpi-row" style="margin-bottom: 30px; gap: 20px;">
+            <div class="tile"><div class="value">{total_files}</div><div class="label">Total BIM Files Checked</div></div>
+            <div class="tile serious"><div class="value">{total_issues}</div><div class="label">Non-Compliant Files</div></div>
+        </div>
+        
+        <h2 style="margin-top:40px; color: var(--accent-dark); border-bottom: 1px solid #eee; padding-bottom: 8px;">2. Audit Findings by Project</h2>
+        <table style="width:100%; text-align:left; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+                <tr style="background: #f4f4f2;">
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Project</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Status</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Total Files Checked</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Non-Compliant Files</th>
+                </tr>
+            </thead>
+            <tbody>
+                {project_rows}
+            </tbody>
+        </table>
+        
+        <h2 style="margin-top:40px; color: var(--accent-dark); border-bottom: 1px solid #eee; padding-bottom: 8px;">3. Outstanding Actions</h2>
+        <p>Project Administrators must review the flagged files in the <b>02_Shared/BIM</b> folder for the non-compliant projects listed above. Email notifications have been drafted or sent to the responsible users who uploaded the files with naming or metadata errors.</p>
+        
+        <h2 style="margin-top:40px; color: var(--accent-dark); border-bottom: 1px solid #eee; padding-bottom: 8px;">4. Continuous Improvement Recommendations</h2>
+        <div style="line-height: 1.6;">
+            {recs}
+        </div>
+        
+        <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: var(--muted); font-size: 12px;">
+            Generated by Automated ACC Governance Auditor
+        </div>
+    </div>
+    <script>
+      // Automatically trigger print dialog on load so they can save to PDF
+      window.onload = () => setTimeout(() => window.print(), 500);
+    </script>
+    """
+    
+    # We use a completely blank layout instead of _page so it looks like a paper report.
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<style>
+{BASE_CSS}
+body {{ background: #e5e5e5; padding: 40px; font-family: -apple-system, system-ui, sans-serif; }}
+@media print {{
+    body {{ background: white; padding: 0; margin: 0; }}
+    .kpi-row {{ display: flex; gap: 20px; }}
+    .tile {{ flex: 1; border: 1px solid #ccc !important; box-shadow: none !important; }}
+}}
+</style>
+</head>
+<body>
+{body}
+</body>
+</html>"""

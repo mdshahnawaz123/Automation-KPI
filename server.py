@@ -39,7 +39,7 @@ from flask import Flask, abort, request
 sys.path.insert(0, os.path.dirname(__file__))
 from src.audit import AuditContext, ContextError, timestamp
 from src.acc_client import ACCApiError
-from src.report import build_index_report, build_project_detail_report, build_shared_bim_report, build_picker, safe_filename, _page
+from src.report import build_index_report, build_project_detail_report, build_shared_bim_report, build_picker, safe_filename, _page, build_monthly_report
 
 app = Flask(__name__)
 _ctx = None
@@ -129,7 +129,42 @@ def index():
         picker_items.append({
             "url": f"/project/{slug}", "name": p["name"], "code": p["code"],
             "badge_html": status_badge + confirm_badge,
+            "checkbox_value": slug
         })
+
+    report_btn = """
+  <button class="btn" id="generate-monthly-btn" style="background:var(--accent);color:white;margin-bottom:20px;" disabled>Generate Monthly Report for Selected</button>
+  <script>
+    function updateReportBtn() {
+      const checked = document.querySelectorAll('.proj-checkbox:checked').length;
+      document.getElementById("generate-monthly-btn").disabled = checked === 0;
+    }
+    document.addEventListener('change', e => {
+      if(e.target.classList.contains('proj-checkbox')) updateReportBtn();
+    });
+    document.getElementById("generate-monthly-btn").addEventListener("click", () => {
+      const slugs = Array.from(document.querySelectorAll('.proj-checkbox:checked')).map(cb => cb.value);
+      if(!slugs.length) return;
+      
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/monthly-report";
+      form.target = "_blank"; // open in new tab
+      
+      slugs.forEach(slug => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "slugs";
+        input.value = slug;
+        form.appendChild(input);
+      });
+      
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    });
+  </script>
+    """
 
     body = f"""
   <div class="hero">
@@ -142,8 +177,9 @@ def index():
     <a class="btn" href="/dashboard">All Projects Dashboard &rarr;</a>
   </div>
   <section>
-    <h2>Jump to a project</h2>
-    {build_picker(picker_items)}
+    <h2>Jump to a project or select for Monthly Report</h2>
+    {report_btn}
+    {build_picker(picker_items, show_checkboxes=True)}
   </section>"""
     return _page("ACC Projects (live)", ctx.account_name, timestamp(), body)
 
@@ -261,6 +297,48 @@ def notify_shared_bim(slug):
     if errors:
         msg += f" Errors: {errors}"
     return msg, 200
+
+@app.route("/monthly-report", methods=["POST"])
+def monthly_report():
+    try:
+        ctx = get_context()
+    except ContextError as e:
+        return f"Configuration error: {e}", 500
+
+    slugs = request.form.getlist("slugs")
+    if not slugs:
+        return "No projects selected.", 400
+
+    projects = get_cached_projects(ctx)
+    selected_data = []
+    
+    # Audit them if needed
+    for slug in slugs:
+        match = next((p for p in projects if slug_for(p["name"]) == slug), None)
+        if match and match["dm_id"]:
+            try:
+                # We do a fresh Shared/BIM check for the report
+                rows = ctx.audit_shared_bim(match["name"], match["dm_id"])
+                
+                # Count the issues
+                issues_count = sum(1 for r in rows if r.get("flags"))
+                total_files = len(rows)
+                
+                selected_data.append({
+                    "project_name": match["name"],
+                    "project_code": match["code"],
+                    "issues_count": issues_count,
+                    "total_files": total_files,
+                    "rows": rows
+                })
+            except ACCApiError:
+                continue
+
+    if not selected_data:
+        return "None of the selected projects were found or audited.", 404
+
+    html = build_monthly_report(selected_data, timestamp(), account_name=ctx.account_name)
+    return html
 
 
 if __name__ == "__main__":
