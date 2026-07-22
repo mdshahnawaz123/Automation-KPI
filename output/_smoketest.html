@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ACC Governance Compliance Report</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    --surface-1: #fcfcfb; --page: #f9f9f7; --text-primary: #0b0b0b; --text-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--text-primary); margin: 0; padding: 0 0 48px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+      --surface-1: #1a1a19; --page: #0d0d0d; --text-primary: #ffffff; --text-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --border: rgba(255,255,255,0.10);
+    }
+  }
+  [data-theme="dark"] {
+    --surface-1: #1a1a19; --page: #0d0d0d; --text-primary: #ffffff; --text-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --border: rgba(255,255,255,0.10);
+  }
+  header { padding: 32px 32px 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; }
+  main { padding: 0 32px; max-width: 1280px; margin: 0 auto; }
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 20px 0 32px; }
+  .tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .tile .value { font-size: 28px; font-weight: 600; font-variant-numeric: proportional-nums; }
+  .tile .label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .tile.critical .value { color: #d03b3b; }
+  .tile.serious .value { color: #ec835a; }
+  .tile.warning .value { color: #a86a00; }
+  .tile.good .value { color: #0ca30c; }
+  section {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 24px;
+  }
+  section h2 { font-size: 15px; margin: 0 0 16px; }
+  .bar-row { display: grid; grid-template-columns: 260px 1fr 40px; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 13px; }
+  .bar-label { color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+  .bar-track { display: flex; height: 16px; background: var(--grid); border-radius: 3px; overflow: hidden; }
+  .bar-total { text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .seg { height: 100%; }
+  .seg-critical { background: #d03b3b; }
+  .seg-serious { background: #ec835a; }
+  .seg-warning { background: #fab219; }
+  .seg-good { background: #0ca30c; border-radius: 3px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); margin-top: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filters select, .filters input {
+    background: var(--page); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: inherit;
+  }
+  .filters input { flex: 1; min-width: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--muted); font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
+  th:hover { color: var(--text-primary); }
+  td.path { font-family: ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); }
+  .sev-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .sev-pill.critical { background: rgba(208,59,59,0.15); color: #d03b3b; }
+  .sev-pill.serious { background: rgba(236,131,90,0.18); color: #b85a30; }
+  .sev-pill.warning { background: rgba(250,178,25,0.20); color: #a86a00; }
+  .empty-state { text-align: center; color: var(--muted); padding: 32px; }
+  .row-count { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ACC Governance Compliance Report</h1>
+  <div class="subtitle">Expo City Dubai (test) &middot; Generated 2026-07-22 12:00 GST</div>
+</header>
+<main>
+  <div class="kpi-row">
+    <div class="tile"><div class="value">3</div><div class="label">Projects Audited</div></div>
+    <div class="tile good"><div class="value">1</div><div class="label">Fully Compliant</div></div>
+    <div class="tile critical"><div class="value">1</div><div class="label">Critical (missing folders)</div></div>
+    <div class="tile serious"><div class="value">1</div><div class="label">Serious (naming errors)</div></div>
+    <div class="tile warning"><div class="value">2</div><div class="label">Warning (missing metadata)</div></div>
+  </div>
+
+  <section>
+    <h2>Issues by project</h2>
+    
+        <div class="bar-row">
+          <div class="bar-label">C3018 - Lead Design Consultancy Service Expo City Apartments (2EA)</div>
+          <div class="bar-track"><div class="seg seg-critical" style="width:33.33%" title="Critical: 1"></div><div class="seg seg-serious" style="width:33.33%" title="Serious: 1"></div><div class="seg seg-warning" style="width:33.33%" title="Warning: 1"></div></div>
+          <div class="bar-total">3</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">C5054 - Main Works Contractor - Mangrove Residences (2MR)</div>
+          <div class="bar-track"><div class="seg seg-warning" style="width:33.33%" title="Warning: 1"></div></div>
+          <div class="bar-total">1</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">C9999 - Fully Compliant Test Project (unmatched)</div>
+          <div class="bar-track"><div class="seg seg-good" style="width:3%"></div></div>
+          <div class="bar-total">OK</div>
+        </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:#d03b3b"></span>Critical -- missing required folder</span>
+      <span><span class="swatch" style="background:#ec835a"></span>Serious -- file naming violation</span>
+      <span><span class="swatch" style="background:#fab219"></span>Warning -- missing required metadata</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>All findings</h2>
+    <div class="filters">
+      <select id="f-project"><option value="">All projects</option></select>
+      <select id="f-category">
+        <option value="">All issue types</option>
+        <option value="folder_structure">Folder structure</option>
+        <option value="naming">File naming</option>
+        <option value="metadata">Metadata</option>
+      </select>
+      <select id="f-severity">
+        <option value="">All severities</option>
+        <option value="critical">Critical</option>
+        <option value="serious">Serious</option>
+        <option value="warning">Warning</option>
+      </select>
+      <input id="f-search" type="text" placeholder="Search path or detail...">
+    </div>
+    <div class="row-count" id="row-count"></div>
+    <table id="findings-table">
+      <thead>
+        <tr>
+          <th data-key="project_name">Project</th>
+          <th data-key="project_code">Code</th>
+          <th data-key="category">Type</th>
+          <th data-key="severity">Severity</th>
+          <th data-key="path">Path / File</th>
+          <th data-key="detail">Detail</th>
+        </tr>
+      </thead>
+      <tbody id="findings-body"></tbody>
+    </table>
+    <div class="empty-state" id="empty-state" style="display:none">No findings match these filters.</div>
+  </section>
+</main>
+
+<script>
+const FINDINGS = [{"project_name": "C3018 - Lead Design Consultancy Service Expo City Apartments", "project_code": "2EA", "category": "folder_structure", "severity": "critical", "path": "02_Shared/BIM/IFC", "detail": "Required folder is missing"}, {"project_name": "C3018 - Lead Design Consultancy Service Expo City Apartments", "project_code": "2EA", "category": "naming", "severity": "serious", "path": "01_WIP/BIM/Native Files/C3018-MDL-2EA0000-ZZ-01.rvt", "detail": "segment 4 ('ZZ') is not a recognised 'Discipline' code"}, {"project_name": "C3018 - Lead Design Consultancy Service Expo City Apartments", "project_code": "2EA", "category": "metadata", "severity": "warning", "path": "01_WIP/Drawings/somefile.pdf", "detail": "Missing required metadata: 'Stage'"}, {"project_name": "C5054 - Main Works Contractor - Mangrove Residences", "project_code": "2MR", "category": "metadata", "severity": "warning", "path": "02_Shared/Documents/report.pdf", "detail": "Missing required metadata: 'Status'"}];
+const CATEGORY_LABEL = {folder_structure: "Folder structure", naming: "File naming", metadata: "Metadata"};
+
+let sortKey = "severity";
+let sortDir = 1;
+const severityRank = {critical: 0, serious: 1, warning: 2};
+
+function populateProjectFilter() {
+  const sel = document.getElementById("f-project");
+  const names = [...new Set(FINDINGS.map(f => f.project_name))].sort();
+  for (const n of names) {
+    const opt = document.createElement("option");
+    opt.value = n; opt.textContent = n;
+    sel.appendChild(opt);
+  }
+}
+
+function currentFilters() {
+  return {
+    project: document.getElementById("f-project").value,
+    category: document.getElementById("f-category").value,
+    severity: document.getElementById("f-severity").value,
+    search: document.getElementById("f-search").value.trim().toLowerCase(),
+  };
+}
+
+function render() {
+  const {project, category, severity, search} = currentFilters();
+  let rows = FINDINGS.filter(f =>
+    (!project || f.project_name === project) &&
+    (!category || f.category === category) &&
+    (!severity || f.severity === severity) &&
+    (!search || f.path.toLowerCase().includes(search) || f.detail.toLowerCase().includes(search))
+  );
+
+  rows.sort((a, b) => {
+    let av = sortKey === "severity" ? severityRank[a.severity] : a[sortKey];
+    let bv = sortKey === "severity" ? severityRank[b.severity] : b[sortKey];
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+
+  const tbody = document.getElementById("findings-body");
+  tbody.innerHTML = "";
+  for (const f of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${f.project_name}</td>
+      <td>${f.project_code || '&mdash;'}</td>
+      <td>${CATEGORY_LABEL[f.category] || f.category}</td>
+      <td><span class="sev-pill ${f.severity}">${f.severity}</span></td>
+      <td class="path">${f.path}</td>
+      <td>${f.detail}</td>`;
+    tbody.appendChild(tr);
+  }
+  document.getElementById("row-count").textContent = `${rows.length} of ${FINDINGS.length} findings`;
+  document.getElementById("empty-state").style.display = rows.length ? "none" : "block";
+}
+
+document.querySelectorAll("#findings-table th").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.key;
+    if (sortKey === key) { sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+    render();
+  });
+});
+
+["f-project", "f-category", "f-severity"].forEach(id =>
+  document.getElementById(id).addEventListener("change", render));
+document.getElementById("f-search").addEventListener("input", render);
+
+populateProjectFilter();
+render();
+</script>
+</body>
+</html>
